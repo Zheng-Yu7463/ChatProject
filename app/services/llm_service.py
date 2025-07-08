@@ -1,25 +1,25 @@
-# app/services/llm_service.py
 import os
 from mlx_lm import load, generate
+from config import MODEL_PATH
 
-# 设置环境变量
 os.environ['MLXLM_USE_MODELSCOPE'] = 'True'
-
-MODEL_PATH = r"/Users/cyoid/.cache/modelscope/hub/models/Qwen/Qwen3-0.6B-MLX-8bit"
 model, tokenizer = load(MODEL_PATH)
 
-def get_llm_response(user_input):
-    # 构造消息
+conversations = {}
+
+
+def get_llm_response(user_input, conv_id, enable_thinking=False):
     if tokenizer.chat_template is not None:
-        messages = [{"role": "user", "content": user_input}]
+        # 先拿当前会话历史，没有则空列表
+        history = conversations.get(conv_id, [])
         prompt = tokenizer.apply_chat_template(
-            messages,
-            add_generation_prompt=True
+            history + [{"role": "user", "content": user_input}],
+            add_generation_prompt=True,
+            enable_thinking=enable_thinking,
         )
     else:
         prompt = user_input
 
-    # 生成回复
     response = generate(
         model,
         tokenizer,
@@ -27,11 +27,21 @@ def get_llm_response(user_input):
         verbose=False,
         max_tokens=1024
     )
+
+    # 更新对话历史
+    conversations.setdefault(conv_id, []).append({"role": "user", "content": user_input})
+    conversations[conv_id].append({"role": "assistant", "content": response})
+
+    print(response)
+
     return response
 
 
-if __name__ == "__main__":
-    ans = get_llm_response("hello world")
-    print(ans)
+def list_conversations():
+    return list(conversations.keys())
 
 
+def new_conversation():
+    new_id = f"conv_{len(conversations) + 1}"
+    conversations[new_id] = []
+    return new_id

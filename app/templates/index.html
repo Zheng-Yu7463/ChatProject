@@ -1,10 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="UTF-8" />
+    <title>本地大模型对话机器人</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
+    <h2>本地大模型聊天机器人</h2>
 
+    <div>
+        <label for="conversation-list">会话选择：</label>
+        <select id="conversation-list" onchange="switchConversation()"></select>
+        <button onclick="createNewConversation()">➕ 新会话</button>
+    </div>
+
+    <div id="chat-box"></div>
+
+    <input type="text" id="user-input" placeholder="请输入消息..." />
+
+    <label>
+        <input type="checkbox" id="thinking-checkbox" />启用思考模式
+    </label>
+    <button onclick="sendMessage()">发送</button>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
