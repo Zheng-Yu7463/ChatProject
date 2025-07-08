@@ -38,10 +38,14 @@ function createNewConversation() {
     });
 }
 
+
 function sendMessage() {
     const inputElem = document.getElementById("user-input");
     const message = inputElem.value.trim();
     if (!message || !currentConvId) return;
+
+    // 读取复选框状态
+    const enableThinking = document.getElementById("thinking-checkbox").checked;
 
     const chatBox = document.getElementById("chat-box");
     chatBox.innerHTML += `<p><b>你：</b>${message}</p>`;
@@ -49,31 +53,26 @@ function sendMessage() {
 
     axios.post("/chat", {
         message: message,
-        conversation_id: currentConvId
-    }).then(res => {
-        chatBox.innerHTML += `<p><b>机器人：</b>${res.data.response}</p>`;
+        conversation_id: currentConvId,
+        enable_thinking: enableThinking   // 这里传入前端开关状态
+    })
+    .then(res => {
+        let resp = res.data.response;
+
+        let thinkMatch = resp.match(/<think>([\s\S]*?)<\/think>/i);
+        let thinking = thinkMatch ? thinkMatch[1].trim() : "";
+
+        let answer = resp.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
+
+        if (thinking) {
+            chatBox.innerHTML += `<p style="color:gray; font-style:italic;">💭 思考：${thinking}</p>`;
+        }
+        chatBox.innerHTML += `<p><b>回答：</b>${answer}</p>`;
         chatBox.scrollTop = chatBox.scrollHeight;
     });
 }
 
-axios.post("/chat", { message: message, conversation_id: currentConvId })
-  .then(res => {
-    let resp = res.data.response;
 
-    // 提取 <think>标签内的思考内容
-    let thinkMatch = resp.match(/<think>([\s\S]*?)<\/think>/i);
-    let thinking = thinkMatch ? thinkMatch[1].trim() : "";
-
-    // 去掉 <think>标签及内容，剩余即回答内容
-    let answer = resp.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
-
-    const chatBox = document.getElementById("chat-box");
-    if (thinking) {
-      chatBox.innerHTML += `<p style="color:gray; font-style:italic;">💭 思考：${thinking}</p>`;
-    }
-    chatBox.innerHTML += `<p><b>回答：</b>${answer}</p>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-  });
 
 function switchConversation() {
     currentConvId = document.getElementById("conversation-list").value;
@@ -103,3 +102,9 @@ function switchConversation() {
     });
 }
 
+document.getElementById("user-input").addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();  // 防止默认行为（如换行）
+        sendMessage();
+    }
+});

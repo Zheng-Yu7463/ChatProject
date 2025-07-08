@@ -26,10 +26,10 @@ def get_conversation_history(conv_id):
     return jsonify({'history': history})
 
 
-
 @main.route('/conversations', methods=['GET'])
 def get_conversations():
     return jsonify({'conversations': list_conversations()})
+
 
 @main.route('/conversations/new', methods=['POST'])
 def create_conversation():

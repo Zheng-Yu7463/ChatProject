@@ -32,7 +32,6 @@ def get_llm_response(user_input, conv_id, enable_thinking=False):
     conversations.setdefault(conv_id, []).append({"role": "user", "content": user_input})
     conversations[conv_id].append({"role": "assistant", "content": response})
 
-    print(response)
 
     return response
 
