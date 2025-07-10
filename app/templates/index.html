@@ -5,24 +5,55 @@
     <title>本地大模型对话机器人</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        /* 可选补充样式（可移至 style.css） */
+        #chat-box {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 10px;
+            background: #fafafa;
+        }
+        .thought {
+            color: gray;
+            font-style: italic;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .chat-input-area input[type="text"] {
+            flex-grow: 1;
+        }
+    </style>
 </head>
 <body>
-    <h2>本地大模型聊天机器人</h2>
+    <header>
+        <h2>本地大模型聊天机器人</h2>
+    </header>
 
-    <div>
-        <label for="conversation-list">会话选择：</label>
-        <select id="conversation-list" onchange="switchConversation()"></select>
-        <button onclick="createNewConversation()">➕ 新会话</button>
-    </div>
+    <main>
+        <section>
+            <label for="choose_conv">会话选择：</label>
+            <select id="choose_conv" onchange="switchConversation()"></select>
+            <button id="new-conv-btn">➕ 新会话</button>
+        </section>
 
-    <div id="chat-box"></div>
+        <section id="chat-box" aria-label="聊天记录"></section>
 
-    <input type="text" id="user-input" placeholder="请输入消息..." />
+        <div class="chat-input-area">
+            <label for="user-input"></label><input type="text" id="user-input" placeholder="请输入消息..." autocomplete="off" />
+            <button type="button" id="send-btn">发送</button>
+        </div>
 
-    <label>
-        <input type="checkbox" id="thinking-checkbox" />启用思考模式
-    </label>
-    <button onclick="sendMessage()">发送</button>
+
+        <label style="margin-top: 10px; display: inline-block;">
+            <input type="checkbox" id="thinking-checkbox" />
+            启用思考模式
+        </label>
+    </main>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
