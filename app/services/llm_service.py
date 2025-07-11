@@ -1,39 +1,56 @@
 import os
 from mlx_lm import load, generate
 from config import MODEL_PATH
+from config import DEEPSEEK_API_KEY
+from openai import OpenAI
 
 os.environ['MLXLM_USE_MODELSCOPE'] = 'True'
 model, tokenizer = load(MODEL_PATH)
+client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
 conversations = {}
 
 
-def get_llm_response(user_input, conv_id, enable_thinking=False):
-    if tokenizer.chat_template is not None:
-        # 先拿当前会话历史，没有则空列表
-        history = conversations.get(conv_id, [])
+def get_llm_response(user_input, conv_id, enable_thinking=False, mode="local"):
+    history = conversations.get(conv_id, [])
 
-        prompt = tokenizer.apply_chat_template(
-            history + [{"role": "user", "content": user_input}],
-            add_generation_prompt=True,
-            enable_thinking=enable_thinking, # 切换思维模式 True为开启 False为关闭
+    if mode == "api":
+        # 调用 DeepSeek API
+        messages = [{"role": "system", "content": "You are a helpful assistant"}] + history + [
+            {"role": "user", "content": user_input}]
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            max_tokens=1024,
+            temperature=0.7,
+            stream=False
         )
+        answer = response.choices[0].message.content
     else:
-        prompt = user_input
+        # 使用本地模型
+        if tokenizer.chat_template is not None:
+            prompt = tokenizer.apply_chat_template(
+                history + [{"role": "user", "content": user_input}],
+                add_generation_prompt=True,
+                enable_thinking=enable_thinking,
+            )
+        else:
+            prompt = user_input
 
-    response = generate(
-        model,
-        tokenizer,
-        prompt=prompt,
-        verbose=False,
-        max_tokens=1024,
-    )
+        answer = generate(
+            model,
+            tokenizer,
+            prompt=prompt,
+            verbose=False,
+            max_tokens=1024,
+        )
 
     # 更新对话历史
     conversations.setdefault(conv_id, []).append({"role": "user", "content": user_input})
-    conversations[conv_id].append({"role": "assistant", "content": response})
+    conversations[conv_id].append({"role": "assistant", "content": answer})
 
-    return response
+    return answer
+
 
 
 # 获取对话列表

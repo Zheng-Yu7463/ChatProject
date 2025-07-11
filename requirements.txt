@@ -1,2 +1,5 @@
-flask
-mlx-lm
+flask~=3.0.3
+openai~=1.60.1
+numpy~=1.26.4
+mlx~=0.26.2
+python-dotenv~=0.21.0

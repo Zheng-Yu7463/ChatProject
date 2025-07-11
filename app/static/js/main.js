@@ -101,40 +101,37 @@ function sendMessage() {
     const message = inputElem.value.trim();
     if (!message || !currentConvId) return;
 
-    // 读取复选框状态
     const enableThinking = document.getElementById("thinking-checkbox").checked;
+    const mode = document.getElementById("model-select").value;
 
     const chatBox = document.getElementById("chat-box");
     chatBox.innerHTML += `<p><b>你：</b>${message}</p>`;
     inputElem.value = "";
 
-    console.log(message);
+    console.log(mode, currentConvId, message); // 调试输出当前对话情况
 
     axios.post("/chat", {
         message: message,
         conversation_id: currentConvId,
-        enable_thinking: enableThinking   // 这里传入前端开关状态
+        enable_thinking: enableThinking,
+        mode: mode
     })
     .then(res => {
-    let resp = res.data.response;
+        let resp = res.data.response;
 
-    let thinkMatch = resp.match(/<think>([\s\S]*?)<\/think>/i);
-    let thinking = thinkMatch ? thinkMatch[1].trim() : "";
+        let thinkMatch = resp.match(/<think>([\s\S]*?)<\/think>/i);
+        let thinking = thinkMatch ? thinkMatch[1].trim() : "";
+        let answer = resp.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
 
-    let answer = resp.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
+        if (thinking) {
+            chatBox.innerHTML += `<p class="thought">💭 思考：${escapeHtml(thinking)}</p>`;
+            if (window.MathJax && window.MathJax.typesetPromise) MathJax.typesetPromise();
+        }
 
-    if (thinking) {
-        chatBox.innerHTML += `<p class="thought">💭 思考：${escapeHtml(thinking)}</p>`;
-        if (window.MathJax && window.MathJax.typesetPromise) {
-    MathJax.typesetPromise();
-}
-    }
-
-    const renderedAnswer = marked.parse(answer);  // ✅ Markdown 转 HTML
-    chatBox.innerHTML += `<div class="ai-reply"><b>回答：</b>${renderedAnswer}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-});
-
+        const renderedAnswer = marked.parse(answer);
+        chatBox.innerHTML += `<div class="ai-reply"><b>回答：</b>${renderedAnswer}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    });
 }
 
 

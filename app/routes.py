@@ -18,9 +18,9 @@ def chat():
     user_message = data.get("message")
     enable_thinking = data.get("enable_thinking", False)
     conv_id = data.get("conversation_id")
+    mode = data.get("mode", "local")  # 默认为 local
 
-    # 传入 conv_id 参数
-    reply = get_llm_response(user_message, conv_id, enable_thinking=enable_thinking)
+    reply = get_llm_response(user_message, conv_id, enable_thinking=enable_thinking, mode=mode)
     return jsonify({'response': reply})
 
 
