@@ -1,60 +1,52 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <meta charset="UTF-8" />
-    <title>本地大模型对话机器人</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <style>
-        /* 可选补充样式（可移至 style.css） */
-        #chat-box {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-top: 10px;
-            background: #fafafa;
-        }
-        .thought {
-            color: gray;
-            font-style: italic;
-        }
-        .chat-input-area {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .chat-input-area input[type="text"] {
-            flex-grow: 1;
-        }
-    </style>
+
+  <meta charset="UTF-8" />
+  <title>本地大模型对话机器人</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> <!-- ✅ 引入 markdown 支持 -->
+    <!-- MathJax v3 -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 </head>
+
 <body>
+  <div class="container">
     <header>
-        <h2>本地大模型聊天机器人</h2>
+      <h2>🤖 本地大模型聊天机器人</h2>
     </header>
 
-    <main>
-        <section>
-            <label for="choose_conv">会话选择：</label>
-            <select id="choose_conv" onchange="switchConversation()"></select>
-            <button id="new-conv-btn">➕ 新会话</button>
-        </section>
+    <section class="controls">
+      <label for="choose_conv">会话选择：</label>
+      <select id="choose_conv"></select>
+      <button id="new-conv-btn">➕ 新会话</button>
+    </section>
 
-        <section id="chat-box" aria-label="聊天记录"></section>
+    <section id="chat-box" aria-label="聊天记录"></section>
 
-        <div class="chat-input-area">
-            <label for="user-input"></label><input type="text" id="user-input" placeholder="请输入消息..." autocomplete="off" />
-            <button type="button" id="send-btn">发送</button>
-        </div>
+    <div class="chat-input-area">
+      <input type="text" id="user-input" placeholder="请输入消息..." autocomplete="off" />
+      <button type="button" id="send-btn">发送</button>
+    </div>
 
+    <label class="think-mode">
+      <input type="checkbox" id="thinking-checkbox" />
+      启用思考模式 💭
+    </label>
+  </div>
 
-        <label style="margin-top: 10px; display: inline-block;">
-            <input type="checkbox" id="thinking-checkbox" />
-            启用思考模式
-        </label>
-    </main>
-
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

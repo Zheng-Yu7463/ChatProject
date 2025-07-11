@@ -50,11 +50,17 @@ window.onload = () => {
 };
 
 
-function loadConversations(callback) {
+function loadConversations(callback, desiredId = null) {
     axios.get('/conversations').then(res => {
         const list = res.data.conversations;
         const select = document.getElementById("choose_conv");
         select.innerHTML = "";
+
+        if (list.length === 0) {
+            // ✅ 如果没有会话，自动创建一个
+            createNewConversation();
+            return;
+        }
 
         list.forEach(id => {
             const opt = document.createElement("option");
@@ -63,12 +69,15 @@ function loadConversations(callback) {
             select.appendChild(opt);
         });
 
-        if (list.length > 0) {
+        // ✅ 如果传入想要选中的 ID 就选它，否则默认选第一个
+        if (desiredId && list.includes(desiredId)) {
+            currentConvId = desiredId;
+        } else if (list.length > 0) {
             currentConvId = list[0];
-            select.value = currentConvId;
         }
 
-        // 回调在列表更新后执行
+        select.value = currentConvId;
+
         if (callback) callback();
     });
 }
@@ -76,15 +85,15 @@ function loadConversations(callback) {
 
 function createNewConversation() {
     axios.post('/conversations/new').then(res => {
-        currentConvId = res.data.conversation_id;
+        const newId = res.data.conversation_id;
+
         loadConversations(() => {
-            const chatBox = document.getElementById("chat-box");
-            chatBox.innerHTML = "";
-        });
+            const select = document.getElementById("choose_conv");
+            select.value = currentConvId;
+            switchConversation();
+        }, newId);
     });
 }
-
-
 
 
 function sendMessage() {
@@ -107,19 +116,25 @@ function sendMessage() {
         enable_thinking: enableThinking   // 这里传入前端开关状态
     })
     .then(res => {
-        let resp = res.data.response;
+    let resp = res.data.response;
 
-        let thinkMatch = resp.match(/<think>([\s\S]*?)<\/think>/i);
-        let thinking = thinkMatch ? thinkMatch[1].trim() : "";
+    let thinkMatch = resp.match(/<think>([\s\S]*?)<\/think>/i);
+    let thinking = thinkMatch ? thinkMatch[1].trim() : "";
 
-        let answer = resp.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
+    let answer = resp.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
 
-        if (thinking) {
-            chatBox.innerHTML += `<p style="color:gray; font-style:italic;">💭 思考：${thinking}</p>`;
-        }
-        chatBox.innerHTML += `<p><b>回答：</b>${answer}</p>`;
-        chatBox.scrollTop = chatBox.scrollHeight;
-    });
+    if (thinking) {
+        chatBox.innerHTML += `<p class="thought">💭 思考：${escapeHtml(thinking)}</p>`;
+        if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+}
+    }
+
+    const renderedAnswer = marked.parse(answer);  // ✅ Markdown 转 HTML
+    chatBox.innerHTML += `<div class="ai-reply"><b>回答：</b>${renderedAnswer}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
+
 }
 
 
@@ -134,14 +149,19 @@ function switchConversation() {
             const history = res.data.history || [];  // 容错，避免undefined
             history.forEach(msg => {
                 if (msg.role === "user") {
-                    chatBox.innerHTML += `<p><b>你：</b>${escapeHtml(msg.content)}</p>`;
+                    const renderedAnswer = marked.parse(answer);
+                    chatBox.innerHTML += `<div class="ai-reply"><b>回答：</b>${renderedAnswer}</div>`;
+                    if (window.MathJax && window.MathJax.typesetPromise) {
+    MathJax.typesetPromise();
+}
+
                 } else if (msg.role === "assistant") {
                     let thinkMatch = msg.content.match(/<think>([\s\S]*?)<\/think>/i);
                     let thinking = thinkMatch ? thinkMatch[1].trim() : "";
                     let answer = msg.content.replace(/<think>[\s\S]*?<\/think>/i, "").trim();
 
                     if (thinking) {
-                        chatBox.innerHTML += `<p class="thought">💭 思考：${escapeHtml(thinking)}</p>`;
+                        chatBox.innerHTML += `<p class="thought">深度思考：${escapeHtml(thinking)}</p>`;
                     }
                     chatBox.innerHTML += `<p><b>回答：</b>${escapeHtml(answer)}</p>`;
                 }
